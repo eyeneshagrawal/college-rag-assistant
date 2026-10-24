@@ -1,96 +1,165 @@
-import html, uuid, time
+import html, uuid, time, urllib.parse
 import streamlit as st
-st.set_page_config(page_title="College Assistant", page_icon=":material/school:", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="TRAG AI", page_icon=":material/pets:", layout="wide", initial_sidebar_state="expanded")
 from rag import ask, docs, topics
-from ingest import index
+from ingest import index as index_files
 
-st.markdown("""
+FOX = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+       '<path fill="#4D6BFE" d="M2.5 3.5 12 9.5h8l9.5-6-1.8 14.6C26.6 25.6 21.8 29 16 29S5.4 25.6 4.3 18.1z"/>'
+       '<path fill="#8EA2FF" d="M5.6 7.6l4.6 3-3.9 3.6zM26.4 7.6l-4.6 3 3.9 3.6z"/>'
+       '<circle cx="11.2" cy="17.2" r="1.7" fill="#17171A"/><circle cx="20.8" cy="17.2" r="1.7" fill="#17171A"/>'
+       '<path fill="#17171A" d="M13.6 22.4h4.8L16 25.2z"/></svg>')
+FOX_URI = "data:image/svg+xml;utf8," + urllib.parse.quote(FOX)
+
+st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
-:root{--blue:#4D6BFE;--blue-bg:#EAF0FF;--text:#1F2329;--muted:#6B7280;--line:#E5E7EB;--side:#F7F8FA;--bubble:#F1F3F6}
-html,body,.stApp,p,li,label,input,textarea,button,h1,h2,h3,h4,.stMarkdown,[data-testid="stCaptionContainer"]{font-family:'Poppins',system-ui,sans-serif !important;color:var(--text)}
-#MainMenu,footer,header [data-testid="stToolbar"]{visibility:hidden}
-.stApp{background:#fff}
-.block-container{max-width:800px;padding-top:2rem;padding-bottom:8rem}
+:root{{--bg:#17171A;--side:#1D1E21;--line:#2B2C30;--hover:#27282C;--active:#2F3035;--box:#2A2B2F;--text:#E8E9EC;--muted:#8D9098;--blue:#4D6BFE}}
+html,body,.stApp,p,li,label,input,textarea,button,h1,h2,h3,h4,.stMarkdown,[data-testid="stCaptionContainer"]{{font-family:'Poppins',system-ui,sans-serif !important}}
+#MainMenu,footer,header[data-testid=stHeader]{{background:transparent}}
+[data-testid=stToolbar]{{visibility:hidden}}
+.stApp{{background:var(--bg)}}
+.block-container{{max-width:800px;padding-top:2rem;padding-bottom:11rem}}
 
-/* ---------- sidebar ---------- */
-[data-testid=stSidebar]{background:var(--side);border-right:1px solid var(--line)}
-[data-testid=stSidebar] .block-container{padding-top:1.2rem}
-.side-brand{display:flex;align-items:center;gap:.6rem;font-weight:600;font-size:1.02rem;margin:.1rem 0 1rem}
-.side-logo{width:28px;height:28px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600}
-.side-h{font-size:.72rem;font-weight:500;color:var(--muted);margin:1.1rem 0 .3rem .2rem}
-.st-key-newchat button{background:var(--blue-bg);color:var(--blue);border:none;border-radius:12px;font-weight:500;width:100%;justify-content:flex-start;padding:.55rem .9rem}
-.st-key-newchat button:hover{background:#DCE6FF;color:var(--blue)}
-[class*="st-key-chat_"] button{background:transparent;border:none;border-radius:10px;width:100%;justify-content:flex-start;text-align:left;
-   font-weight:400;font-size:.86rem;padding:.45rem .7rem;color:var(--text);box-shadow:none}
-[class*="st-key-chat_"] button p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-[class*="st-key-chat_"] button:hover{background:#ECEEF2}
-[class*="st-key-act_"] button{background:var(--blue-bg) !important;color:var(--blue) !important;font-weight:500}
-[class*="st-key-del_"] button{background:transparent;border:none;color:var(--muted);padding:.3rem;box-shadow:none;min-height:0}
-[class*="st-key-del_"] button:hover{background:#FDE8E8;color:#D92D20}
-[data-testid=stFileUploaderDropzone]{background:#fff;border:1px dashed #CBD2DC;border-radius:12px}
-[data-testid=stFileUploaderDropzone]:hover{border-color:var(--blue);background:var(--blue-bg)}
-.doc{padding:.55rem .75rem;margin:.35rem 0;border:1px solid var(--line);border-radius:10px;background:#fff}
-.doc b{display:block;font-weight:500;font-size:.8rem;word-break:break-word}
-.doc span{color:var(--muted);font-size:.72rem}
-.empty{color:var(--muted);font-size:.8rem;padding:.2rem .2rem}
+/* ===== sidebar ===== */
+[data-testid=stSidebar]{{background:var(--side);border-right:1px solid var(--line);min-width:300px !important}}
+[data-testid=stSidebar] .block-container{{padding-top:1rem}}
+.brand{{display:flex;align-items:center;gap:.55rem;margin:.1rem 0 1.1rem;font-weight:600;font-size:1.35rem;color:var(--blue);letter-spacing:-.01em}}
+.brand svg{{width:34px;height:34px}}
+.st-key-newchat button{{background:#37383D;color:#fff;border:none;border-radius:999px;height:46px;font-weight:500;width:100%}}
+.st-key-newchat button:hover{{background:#424348;color:#fff}}
+.side-h{{font-size:.75rem;font-weight:500;color:var(--muted);margin:1.3rem 0 .35rem .35rem}}
+[class*="st-key-chat_"] button,[class*="st-key-act_"] button{{background:transparent;border:none;border-radius:10px;width:100%;justify-content:flex-start;
+   text-align:left;font-weight:400;font-size:.88rem;padding:.5rem .75rem;color:var(--text);box-shadow:none}}
+[class*="st-key-chat_"] button p,[class*="st-key-act_"] button p{{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+[class*="st-key-chat_"] button:hover{{background:var(--hover)}}
+[class*="st-key-act_"] button{{background:var(--active) !important}}
+[class*="st-key-del_"] button{{background:transparent;border:none;color:var(--muted);padding:.2rem;min-height:0;box-shadow:none}}
+[class*="st-key-del_"] button:hover{{background:#3A2226;color:#FF6B6B}}
+.empty{{color:var(--muted);font-size:.82rem;padding:.2rem .35rem}}
+[data-testid=stFileUploaderDropzone]{{background:var(--box);border:1px dashed #44464C;border-radius:12px}}
+[data-testid=stFileUploaderDropzone]:hover{{border-color:var(--blue)}}
+.doc{{padding:.5rem .75rem;margin:.35rem 0;border:1px solid var(--line);border-radius:10px;background:var(--box)}}
+.doc b{{display:block;font-weight:500;font-size:.8rem;word-break:break-word;color:var(--text)}}
+.doc span{{color:var(--muted);font-size:.72rem}}
+.who{{display:flex;align-items:center;gap:.7rem;font-size:.9rem;font-weight:500;margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--line)}}
+.who i{{width:34px;height:34px;border-radius:50%;background:#D0451B;color:#fff;font-style:normal;display:flex;align-items:center;justify-content:center;font-weight:600}}
+[data-testid=stExpander]{{border:1px solid var(--line);border-radius:12px;background:transparent}}
+[data-testid=stExpander] summary{{font-size:.86rem;font-weight:500}}
 
-/* ---------- main ---------- */
-.hero{text-align:center;margin:4.5vh 0 1.8rem}
-.hero .logo{width:52px;height:52px;border-radius:16px;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:1.3rem;margin-bottom:1rem}
-.hero .t{font-size:1.7rem;font-weight:600;letter-spacing:-.01em}
-.hero .s{color:var(--muted);font-weight:300;margin-top:.35rem}
-.stButton>button{border:1px solid var(--line);border-radius:14px;background:#fff;font-weight:400;font-size:.84rem;padding:.55rem .9rem;transition:all .15s;box-shadow:none;height:auto}
-.stButton>button p{white-space:normal;text-align:left}
-.stButton>button:hover{border-color:var(--blue);color:var(--blue);background:#FAFBFF}
-.tchip{display:inline-block;padding:.3rem .85rem;margin:.2rem .35rem .2rem 0;border-radius:999px;background:var(--blue-bg);color:var(--blue);font-size:.82rem;font-weight:500}
-[data-testid=stExpander]{border:1px solid var(--line);border-radius:14px;background:#fff}
-[data-testid=stExpander] summary{font-size:.86rem;font-weight:500}
+/* ===== greeting ===== */
+.hello{{display:flex;align-items:center;justify-content:center;gap:.7rem;margin-top:21vh;margin-bottom:1.6rem;font-size:1.65rem;font-weight:600;color:var(--text)}}
+.hello svg{{width:40px;height:40px}}
 
-[data-testid=stChatMessageAvatarUser],[data-testid=stChatMessageAvatarAssistant]{display:none}
-[data-testid=stChatMessage]{background:transparent;padding:.5rem 0}
-[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]){flex-direction:row-reverse}
-[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]) [data-testid=stChatMessageContent]{background:var(--bubble);border-radius:18px;padding:.7rem 1.1rem;max-width:80%;margin-left:auto}
-[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarAssistant]) [data-testid=stChatMessageContent]{line-height:1.75}
-.chip{display:inline-block;padding:.2rem .7rem;margin:.15rem .3rem .15rem 0;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);font-size:.75rem}
-.pass{border-left:2px solid var(--line);padding:.1rem 0 .1rem .8rem;margin:.55rem 0;font-size:.82rem;color:var(--muted);font-weight:300}
-.pass b{color:var(--text);font-weight:500}
+/* ===== composer ===== */
+[class*="st-key-cmp_"] [data-testid=stForm]{{background:var(--box);border:1px solid #36373C;border-radius:22px;padding:.9rem 1.1rem .8rem}}
+[class*="st-key-cmp_"] [data-testid=stForm]:focus-within{{border-color:#4A5CC6}}
+[class*="st-key-cmp_"] input{{background:transparent !important;border:none !important;box-shadow:none !important;font-size:1rem;color:var(--text);padding:.4rem 0 .9rem}}
+[class*="st-key-cmp_"] [data-testid=stTextInput]>div,[class*="st-key-cmp_"] [data-testid=stTextInputRootElement]{{border:none !important;background:transparent !important;box-shadow:none !important}}
+[data-testid=InputInstructions]{{display:none}}
+[class*="st-key-cmp_"] button[kind=secondaryFormSubmit],[class*="st-key-cmp_"] [data-testid=stFormSubmitButton] button{{background:var(--blue);border:none;border-radius:50%;width:38px;height:38px;min-height:0;padding:0;color:#fff;float:right}}
+[class*="st-key-cmp_"] [data-testid=stFormSubmitButton] button:hover{{background:#6F87FF;color:#fff}}
+[class*="st-key-cmp_"] [data-testid=stPills] button{{border-radius:999px;font-size:.82rem;font-weight:500;padding:.3rem .85rem;border:1px solid #484A51;background:transparent;color:var(--text)}}
+[class*="st-key-cmp_"] [data-testid=stPills] button[aria-checked=true],[class*="st-key-cmp_"] [data-testid=stPills] button[kind=pillsActive]{{background:#25306B;border-color:var(--blue);color:#9FB1FF}}
+.st-key-cmp_fixed{{position:fixed;bottom:1.4rem;left:calc((100vw + 300px)/2);transform:translateX(-50%);width:min(780px,calc(100vw - 300px - 3rem));z-index:99}}
+.stApp:has([data-testid=stSidebar][aria-expanded=false]) .st-key-cmp_fixed{{left:50%;width:min(780px,calc(100vw - 3rem))}}
+.note{{text-align:center;color:var(--muted);font-size:.72rem;margin-top:.5rem}}
 
-[data-testid=stBottom]>div{background:linear-gradient(transparent,#fff 30%)}
-[data-testid=stChatInput]{border:1px solid var(--line);border-radius:24px;background:var(--side);box-shadow:none;transition:all .15s}
-[data-testid=stChatInput]:focus-within{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(77,107,254,.12)}
-[data-testid=stChatInput] textarea{font-size:.95rem;min-height:44px}
-[data-testid=stChatInputSubmitButton]{background:var(--blue) !important;color:#fff !important;border-radius:50%}
+/* ===== messages ===== */
+[data-testid=stChatMessageAvatarUser],[data-testid=stChatMessageAvatarAssistant]{{display:none}}
+[data-testid=stChatMessage]{{background:transparent;padding:.55rem 0}}
+[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]){{flex-direction:row-reverse}}
+[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]) [data-testid=stChatMessageContent]{{background:var(--box);border-radius:18px;padding:.7rem 1.1rem;max-width:80%;margin-left:auto}}
+[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarAssistant])::before{{content:"";flex:0 0 30px;height:30px;margin-right:.8rem;margin-top:.15rem;
+   background:url("{FOX_URI}") no-repeat center/contain}}
+[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarAssistant]) [data-testid=stChatMessageContent]{{line-height:1.75}}
+.chip{{display:inline-block;padding:.2rem .7rem;margin:.15rem .3rem .15rem 0;border:1px solid #3A3C42;border-radius:999px;color:var(--muted);font-size:.75rem}}
+.tchip{{display:inline-block;padding:.3rem .85rem;margin:.2rem .35rem .2rem 0;border-radius:999px;background:#25306B;color:#9FB1FF;font-size:.82rem;font-weight:500}}
+.pass{{border-left:2px solid #3A3C42;padding:.1rem 0 .1rem .8rem;margin:.55rem 0;font-size:.82rem;color:var(--muted);font-weight:300}}
+.pass b{{color:var(--text);font-weight:500}}
+.stButton>button{{border:1px solid #3A3C42;border-radius:14px;background:transparent;color:var(--text);font-weight:400;font-size:.84rem;padding:.55rem .9rem;height:auto;box-shadow:none}}
+.stButton>button p{{white-space:normal;text-align:left}}
+.stButton>button:hover{{border-color:var(--blue);color:#9FB1FF;background:#1F2133}}
 </style>""", unsafe_allow_html=True)
 
 ss = st.session_state
 ss.setdefault("chats", {}); ss.setdefault("order", []); ss.setdefault("cur", None)
 ss.setdefault("done", set()); ss.setdefault("pending", None)
 
-def new_chat():
-    ss.cur = None
-def get_chat():
-    if ss.cur is None or ss.cur not in ss.chats:
-        cid = uuid.uuid4().hex[:8]; ss.chats[cid] = {"title": "New chat", "msgs": []}; ss.order.insert(0, cid); ss.cur = cid
-    return ss.chats[ss.cur]
-
 try: kb = docs()
 except Exception: kb = []
 
-# ---------- take input first so the sidebar title updates immediately ----------
-q = ss.pending or st.chat_input("Message College Assistant" if kb else "Upload a PDF in the sidebar to begin", disabled=not kb)
+# ---- read submitted input BEFORE layout (widget state is available at run start) ----
+q = ss.pending
+if not q and (ss.get("send") or "send" not in ss): q = (ss.get("txt") or "").strip()
 ss.pending = None
-if q:
-    chat = get_chat()
-    if not chat["msgs"]: chat["title"] = q.strip()[:40]
-    chat["msgs"].append({"role": "user", "text": q.strip()})
+chat = ss.chats.get(ss.cur)
+empty = not (chat and chat["msgs"]) and not q
+modes = ss.get("modes") or []
+deep, wide = "Deep Think" in modes, "Wide Search" in modes
 
-# ---------- sidebar ----------
+def composer(key):
+    with st.container(key=key):
+        with st.form(key + "_f", clear_on_submit=True, border=False):
+            st.text_input("msg", key="txt", placeholder="Message TRAG AI" if kb else "Upload a PDF in the sidebar to begin",
+                          label_visibility="collapsed", disabled=not kb)
+            a, b = st.columns([6, 1], vertical_alignment="center")
+            with a: st.pills("modes", ["Deep Think", "Wide Search"], selection_mode="multi", key="modes", label_visibility="collapsed")
+            with b:
+                try: st.form_submit_button("", icon=":material/arrow_upward:", key="send")
+                except TypeError: st.form_submit_button("", icon=":material/arrow_upward:")
+
+def show_sources(srcs):
+    if not srcs: return
+    seen = sorted({(s, p) for s, p, _ in srcs})
+    st.markdown("".join(f'<span class="chip">{html.escape(s)} · p.{p}</span>' for s, p in seen), unsafe_allow_html=True)
+    with st.expander("View source passages"):
+        for s, p, t in srcs:
+            st.markdown(f'<div class="pass"><b>{html.escape(s)}</b> · page {p}<br>{html.escape(t[:380])}</div>', unsafe_allow_html=True)
+
+# ---- main ----
+if empty:
+    st.markdown(f'<div class="hello">{FOX}<span>Hi! What\'s on your mind today?</span></div>', unsafe_allow_html=True)
+    composer("cmp_mid")
+    if kb:
+        st.write("")
+        ex = ["What is the minimum attendance required?", "Summarise the key rules", "What documents are required for registration?", "What is the exam revaluation procedure?"]
+        c1, c2 = st.columns(2)
+        for i, e in enumerate(ex):
+            if (c1 if i % 2 == 0 else c2).button(e, key=f"ex{i}", use_container_width=True): ss.pending = e; st.rerun()
+        with st.expander("Explore topics in a document"):
+            pick = st.selectbox("Document", [k for k, _ in kb], label_visibility="collapsed")
+            if st.button("Show topics", key="topics"):
+                with st.spinner("Reading document"):
+                    try: st.markdown("".join(f'<span class="tchip">{html.escape(t)}</span>' for t in topics(pick)), unsafe_allow_html=True)
+                    except Exception: st.warning("Could not load topics. Please try again.")
+    else:
+        st.info("Upload one or more PDFs in the sidebar to get started.")
+else:
+    if q:
+        if not chat:
+            cid = uuid.uuid4().hex[:8]; ss.chats[cid] = {"title": q[:40], "msgs": []}; ss.order.insert(0, cid); ss.cur = cid; chat = ss.chats[cid]
+        chat["msgs"].append({"role": "user", "text": q})
+    for m in chat["msgs"]:
+        with st.chat_message(m["role"]):
+            st.markdown(m["text"]); show_sources(m.get("srcs"))
+    if q:
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking" if deep else "Searching your documents"):
+                try: a, s = ask(q, deep, wide)
+                except Exception: a, s = "Something went wrong while searching. Please try again.", []
+            def gen():
+                for w in a.split(" "): yield w + " "; time.sleep(0.012)
+            st.write_stream(gen()); show_sources(s)
+        chat["msgs"].append({"role": "assistant", "text": a, "srcs": s})
+    composer("cmp_fixed")
+
+# ---- sidebar (rendered last so titles include the new chat) ----
 with st.sidebar:
-    st.markdown('<div class="side-brand"><div class="side-logo">C</div>College Assistant</div>', unsafe_allow_html=True)
-    if st.button("New chat", icon=":material/add:", key="newchat", use_container_width=True):
-        new_chat(); st.rerun()
-    st.markdown('<div class="side-h">Recent chats</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="brand">{FOX}<span>TRAG AI</span></div>', unsafe_allow_html=True)
+    if st.button("New chat", icon=":material/add_circle:", key="newchat", use_container_width=True):
+        ss.cur = None; st.rerun()
+    st.markdown('<div class="side-h">Today</div>', unsafe_allow_html=True)
     if not ss.order: st.markdown('<div class="empty">No conversations yet.</div>', unsafe_allow_html=True)
     for cid in list(ss.order):
         a, b = st.columns([6, 1], vertical_alignment="center")
@@ -108,56 +177,10 @@ with st.sidebar:
     new = [f for f in up or [] if (f.name, f.size) not in ss.done]
     if new:
         with st.spinner(f"Indexing {len(new)} file(s)"):
-            n = index([(f.name, f) for f in new])
+            n = index_files([(f.name, f) for f in new])
         ss.done |= {(f.name, f.size) for f in new}
         st.success(f"Indexed {n} passages"); st.rerun()
-    if kb:
-        for name, n in kb:
-            st.markdown(f'<div class="doc"><b>{html.escape(name)}</b><span>{n} passages indexed</span></div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="empty">No documents yet. PDFs are indexed automatically on upload.</div>', unsafe_allow_html=True)
-
-# ---------- main ----------
-chat = ss.chats.get(ss.cur)
-msgs = chat["msgs"] if chat else []
-
-def show_sources(srcs):
-    if not srcs: return
-    seen = sorted({(s, p) for s, p, _ in srcs})
-    st.markdown("".join(f'<span class="chip">{html.escape(s)} · p.{p}</span>' for s, p in seen), unsafe_allow_html=True)
-    with st.expander("View source passages"):
-        for s, p, t in srcs:
-            st.markdown(f'<div class="pass"><b>{html.escape(s)}</b> · page {p}<br>{html.escape(t[:380])}</div>', unsafe_allow_html=True)
-
-if not msgs:
-    st.markdown('<div class="hero"><div class="logo">C</div><div class="t">Hi, how can I help you today?</div>'
-                '<div class="s">Ask anything about your college documents. Every answer cites its source.</div></div>', unsafe_allow_html=True)
-    if kb:
-        ex = ["What is the minimum attendance required?", "Summarise the key rules", "What documents are required for registration?", "What is the exam revaluation procedure?"]
-        c1, c2 = st.columns(2)
-        for i, e in enumerate(ex):
-            if (c1 if i % 2 == 0 else c2).button(e, key=f"ex{i}", use_container_width=True): ss.pending = e; st.rerun()
-        with st.expander("Explore topics in a document"):
-            pick = st.selectbox("Document", [k for k, _ in kb], label_visibility="collapsed")
-            if st.button("Show topics", key="topics"):
-                with st.spinner("Reading document"):
-                    try: st.markdown("".join(f'<span class="tchip">{html.escape(t)}</span>' for t in topics(pick)), unsafe_allow_html=True)
-                    except Exception: st.warning("Could not load topics. Please try again.")
-    else:
-        st.info("Upload one or more PDFs in the sidebar to get started.")
-
-history = msgs[:-1] if (q and msgs) else msgs
-for m in history:
-    with st.chat_message(m["role"]):
-        st.markdown(m["text"]); show_sources(m.get("srcs"))
-
-if q:
-    with st.chat_message("user"): st.markdown(q.strip())
-    with st.chat_message("assistant"):
-        with st.spinner("Searching your documents"):
-            try: a, s = ask(q.strip())
-            except Exception: a, s = "Something went wrong while searching. Please try again.", []
-        def gen():
-            for w in a.split(" "): yield w + " "; time.sleep(0.012)
-        st.write_stream(gen()); show_sources(s)
-    chat["msgs"].append({"role": "assistant", "text": a, "srcs": s})
+    for name, n in kb:
+        st.markdown(f'<div class="doc"><b>{html.escape(name)}</b><span>{n} passages indexed</span></div>', unsafe_allow_html=True)
+    if not kb: st.markdown('<div class="empty">No documents yet. PDFs are indexed automatically on upload.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="who"><i>G</i>Guest</div>', unsafe_allow_html=True)

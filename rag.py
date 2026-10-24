@@ -13,18 +13,18 @@ SYSTEM = ("College assistant. Answer ONLY from the CONTEXT. Be concise (max 3 se
           f"If the context fully lacks the answer, reply with ONLY: {c.NOT_FOUND} "
           "Never add that sentence to a real answer. Do not write citations; sources are shown separately.")
 
-def retrieve(q):
+def retrieve(q, k=None):
     v = vo.embed([q], model=c.EMBED_MODEL, input_type="query").embeddings[0]
-    hits = qd.query_points(c.COLLECTION, query=v, limit=c.TOP_K, with_payload=True).points
+    hits = qd.query_points(c.COLLECTION, query=v, limit=k or c.TOP_K, with_payload=True).points
     return [h for h in hits if h.score >= c.MIN_SCORE]
 
 @functools.lru_cache(maxsize=512)          # repeated questions cost 0 tokens
-def ask(q):
-    hits = retrieve(q)
+def ask(q, deep=False, wide=False):
+    hits = retrieve(q, 8 if wide else None)
     if not hits:                            # no evidence -> refuse WITHOUT calling the LLM (0 tokens)
         return c.NOT_FOUND, []
     ctx = "\n\n".join(f"[{h.payload['source']} p{h.payload['page']}] {h.payload['text']}" for h in hits)
-    r = cl.chat.completions.create(model=c.LLM_MODEL, max_completion_tokens=c.MAX_OUT, reasoning_effort="low",
+    r = cl.chat.completions.create(model=c.LLM_MODEL, max_completion_tokens=1800 if deep else c.MAX_OUT, reasoning_effort="high" if deep else "low",
                                    messages=[{"role": "system", "content": SYSTEM},
                                              {"role": "user", "content": f"CONTEXT:\n{ctx}\n\nQUESTION: {q}"}])
     srcs = [(h.payload["source"], h.payload["page"], h.payload["text"]) for h in hits]
