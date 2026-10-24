@@ -1,31 +1,37 @@
 import html, uuid, time, urllib.parse
 import streamlit as st
-st.set_page_config(page_title="TRAG AI", page_icon=":material/pets:", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="TRAG AI", page_icon=":material/school:", layout="wide", initial_sidebar_state="expanded")
 from rag import ask, docs, topics
 from ingest import index as index_files
 
 FOX = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-       '<path fill="#4D6BFE" d="M2.5 3.5 12 9.5h8l9.5-6-1.8 14.6C26.6 25.6 21.8 29 16 29S5.4 25.6 4.3 18.1z"/>'
-       '<path fill="#8EA2FF" d="M5.6 7.6l4.6 3-3.9 3.6zM26.4 7.6l-4.6 3 3.9 3.6z"/>'
-       '<circle cx="11.2" cy="17.2" r="1.7" fill="#17171A"/><circle cx="20.8" cy="17.2" r="1.7" fill="#17171A"/>'
-       '<path fill="#17171A" d="M13.6 22.4h4.8L16 25.2z"/></svg>')
+       '<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C86FF"/><stop offset="1" stop-color="#3550E8"/></linearGradient></defs>'
+       '<rect width="32" height="32" rx="9" fill="url(#tg)"/>'
+       '<path fill="#fff" d="M8.6 8.4l3.6 2.5c2.5-1.1 5.1-1.1 7.6 0l3.6-2.5v9.1c0 4.7-3 7.6-7.4 8.1-4.4-.5-7.4-3.4-7.4-8.1z"/>'
+       '<circle cx="12.7" cy="15.4" r="3" fill="#3550E8"/><circle cx="19.3" cy="15.4" r="3" fill="#3550E8"/>'
+       '<circle cx="12.7" cy="15.4" r="1.15" fill="#fff"/><circle cx="19.3" cy="15.4" r="1.15" fill="#fff"/>'
+       '<path fill="#F5A524" d="M14.7 19.2h2.6L16 21.6z"/></svg>')
 FOX_URI = "data:image/svg+xml;utf8," + urllib.parse.quote(FOX)
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Rock+Salt&display=swap');
 :root{{--bg:#17171A;--side:#1D1E21;--line:#2B2C30;--hover:#27282C;--active:#2F3035;--box:#2A2B2F;--text:#E8E9EC;--muted:#8D9098;--blue:#4D6BFE}}
 html,body,.stApp,p,li,label,input,textarea,button,h1,h2,h3,h4,.stMarkdown,[data-testid="stCaptionContainer"]{{font-family:'Poppins',system-ui,sans-serif !important}}
-#MainMenu,footer,header[data-testid=stHeader]{{background:transparent}}
-[data-testid=stToolbar]{{visibility:hidden}}
+footer,#MainMenu,[data-testid=stMainMenu],[data-testid=stAppDeployButton],[data-testid=stToolbarActions],[data-testid=stDecoration]{{display:none !important}}
+header[data-testid=stHeader]{{background:transparent}}
+[data-testid=stExpandSidebarButton],[data-testid=stSidebarCollapsedControl],[data-testid=stSidebarCollapseButton],[data-testid=collapsedControl]{{visibility:visible !important;display:flex !important;color:var(--muted)}}
 .stApp{{background:var(--bg)}}
 .block-container{{max-width:800px;padding-top:2rem;padding-bottom:11rem}}
 
 /* ===== sidebar ===== */
-[data-testid=stSidebar]{{background:var(--side);border-right:1px solid var(--line);min-width:300px !important}}
+[data-testid=stSidebar]{{background:var(--side);border-right:1px solid var(--line)}}
+[data-testid=stSidebar][aria-expanded=true]{{min-width:300px;width:300px}}
 [data-testid=stSidebar] .block-container{{padding-top:1rem}}
-.brand{{display:flex;align-items:center;gap:.55rem;margin:.1rem 0 1.1rem;font-weight:600;font-size:1.35rem;color:var(--blue);letter-spacing:-.01em}}
-.brand svg{{width:34px;height:34px}}
+.brand{{display:flex;align-items:center;gap:.7rem;margin:.1rem 0 1.2rem}}
+.brand span,.hello .bn{{font-family:'Rock Salt',cursive !important;font-weight:400;letter-spacing:.02em;color:#8EA2FF}}
+.brand span{{font-size:1.15rem}}
+.brand svg{{width:36px;height:36px;flex:0 0 36px}}
 .st-key-newchat button{{background:#37383D;color:#fff;border:none;border-radius:999px;height:46px;font-weight:500;width:100%}}
 .st-key-newchat button:hover{{background:#424348;color:#fff}}
 .side-h{{font-size:.75rem;font-weight:500;color:var(--muted);margin:1.3rem 0 .35rem .35rem}}
