@@ -1,5 +1,5 @@
 """Query path: embed -> vector search -> (score gate) -> Groq LLM. Token-lean by design."""
-import functools
+import functools, re
 from groq import Groq
 import voyageai
 from qdrant_client import QdrantClient
@@ -10,7 +10,8 @@ qd = QdrantClient(url=c.QDRANT_URL, api_key=c.QDRANT_API_KEY)
 cl = Groq(api_key=c.GROQ_API_KEY)
 
 SYSTEM = ("College assistant. Answer ONLY from the CONTEXT. Be concise (max 3 sentences). "
-          f"Cite source file+page. If context lacks the answer, reply exactly: {c.NOT_FOUND}")
+          f"If the context fully lacks the answer, reply with ONLY: {c.NOT_FOUND} "
+          "Never add that sentence to a real answer. Do not write citations; sources are shown separately.")
 
 def retrieve(q):
     v = vo.embed([q], model=c.EMBED_MODEL, input_type="query").embeddings[0]
@@ -27,5 +28,7 @@ def ask(q):
                                    messages=[{"role": "system", "content": SYSTEM},
                                              {"role": "user", "content": f"CONTEXT:\n{ctx}\n\nQUESTION: {q}"}])
     srcs = sorted({(h.payload["source"], h.payload["page"]) for h in hits})
-    ans = r.choices[0].message.content.strip()
-    return ans, ([] if c.NOT_FOUND in ans else srcs)
+    ans = re.sub(r"【[^】]*】", "", r.choices[0].message.content).strip()
+    if ans.replace(c.NOT_FOUND, "").strip():          # real answer: drop any stray refusal sentence
+        return ans.replace(c.NOT_FOUND, "").strip(), srcs
+    return c.NOT_FOUND, []
