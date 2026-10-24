@@ -1,11 +1,12 @@
 import urllib.parse
 OWL = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-       '<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C86FF"/><stop offset="1" stop-color="#3550E8"/></linearGradient></defs>'
-       '<rect width="32" height="32" rx="9" fill="url(#tg)"/>'
-       '<path fill="#fff" d="M8.6 8.4l3.6 2.5c2.5-1.1 5.1-1.1 7.6 0l3.6-2.5v9.1c0 4.7-3 7.6-7.4 8.1-4.4-.5-7.4-3.4-7.4-8.1z"/>'
-       '<circle cx="12.7" cy="15.4" r="3" fill="#3550E8"/><circle cx="19.3" cy="15.4" r="3" fill="#3550E8"/>'
-       '<circle cx="12.7" cy="15.4" r="1.15" fill="#fff"/><circle cx="19.3" cy="15.4" r="1.15" fill="#fff"/>'
-       '<path fill="#F5A524" d="M14.7 19.2h2.6L16 21.6z"/></svg>')
+       '<defs><linearGradient id="ct" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B7C4FF"/><stop offset="1" stop-color="#7B93FF"/></linearGradient>'
+       '<linearGradient id="cl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B78FF"/><stop offset="1" stop-color="#3550E8"/></linearGradient>'
+       '<linearGradient id="cr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F59EC"/><stop offset="1" stop-color="#2236B8"/></linearGradient></defs>'
+       '<path d="M16 2.5 28.5 9.7 16 16.9 3.5 9.7z" fill="url(#ct)"/>'
+       '<path d="M3.5 9.7 16 16.9V30L3.5 22.8z" fill="url(#cl)"/>'
+       '<path d="M28.5 9.7 16 16.9V30l12.5-7.2z" fill="url(#cr)"/>'
+       '<path d="M16 16.9V30M3.5 9.7 16 16.9l12.5-7.2" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".9" stroke-linejoin="round"/></svg>')
 OWL_URI = "data:image/svg+xml;utf8," + urllib.parse.quote(OWL)
 
 THEMES = {
@@ -17,7 +18,7 @@ THEMES = {
 
 def css(theme):
     v = ";".join(f"--{k}:{x}" for k, x in THEMES[theme].items())
-    return "<style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Rock+Salt&display=swap');" \
+    return "<style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Unbounded:wght@600;800&display=swap');" \
            f":root{{{v}}}" + BASE.replace("__OWL__", OWL_URI) + "</style>"
 
 BASE = """
@@ -35,8 +36,8 @@ header[data-testid=stHeader]{background:transparent}
 [data-testid=stSidebar][aria-expanded=true]{min-width:290px;width:290px}
 [data-testid=stSidebar] .block-container,[data-testid=stSidebarUserContent]{padding-top:1rem}
 .brand{display:flex;align-items:center;gap:.7rem;margin:.1rem 0 1rem}
-.brand svg{width:36px;height:36px;flex:0 0 36px}
-.brand span{font-family:'Rock Salt',cursive !important;font-size:1.1rem;letter-spacing:.02em;color:var(--text)}
+.brand svg{width:34px;height:34px;flex:0 0 34px}
+.brand span{font-family:'Unbounded','Poppins',sans-serif !important;font-weight:800;font-size:1.12rem;letter-spacing:.01em;text-transform:uppercase;color:var(--text);line-height:1}
 .st-key-newchat button{background:var(--btn);color:var(--btnink);border:none;border-radius:999px;height:44px;font-weight:500;width:100%}
 .st-key-newchat button *{color:var(--btnink) !important}
 .st-key-newchat button:hover{opacity:.88}
