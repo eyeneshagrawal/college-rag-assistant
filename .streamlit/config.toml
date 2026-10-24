@@ -1,9 +1,6 @@
 [theme]
-base = "dark"
+base = "light"
 primaryColor = "#4D6BFE"
-backgroundColor = "#17171A"
-secondaryBackgroundColor = "#1D1E21"
-textColor = "#E8E9EC"
 font = "sans serif"
 [server]
 maxUploadSize = 50

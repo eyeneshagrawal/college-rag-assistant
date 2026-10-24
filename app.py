@@ -1,119 +1,55 @@
-import html, uuid, time, urllib.parse
+import html, uuid, time
 import streamlit as st
 st.set_page_config(page_title="TRAG AI", page_icon=":material/school:", layout="wide", initial_sidebar_state="expanded")
 from rag import ask, docs, topics
-from ingest import index as index_files
-
-FOX = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-       '<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C86FF"/><stop offset="1" stop-color="#3550E8"/></linearGradient></defs>'
-       '<rect width="32" height="32" rx="9" fill="url(#tg)"/>'
-       '<path fill="#fff" d="M8.6 8.4l3.6 2.5c2.5-1.1 5.1-1.1 7.6 0l3.6-2.5v9.1c0 4.7-3 7.6-7.4 8.1-4.4-.5-7.4-3.4-7.4-8.1z"/>'
-       '<circle cx="12.7" cy="15.4" r="3" fill="#3550E8"/><circle cx="19.3" cy="15.4" r="3" fill="#3550E8"/>'
-       '<circle cx="12.7" cy="15.4" r="1.15" fill="#fff"/><circle cx="19.3" cy="15.4" r="1.15" fill="#fff"/>'
-       '<path fill="#F5A524" d="M14.7 19.2h2.6L16 21.6z"/></svg>')
-FOX_URI = "data:image/svg+xml;utf8," + urllib.parse.quote(FOX)
-
-st.markdown(f"""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Rock+Salt&display=swap');
-:root{{--bg:#17171A;--side:#1D1E21;--line:#2B2C30;--hover:#27282C;--active:#2F3035;--box:#2A2B2F;--text:#E8E9EC;--muted:#8D9098;--blue:#4D6BFE}}
-html,body,.stApp,p,li,label,input,textarea,button,h1,h2,h3,h4,.stMarkdown,[data-testid="stCaptionContainer"]{{font-family:'Poppins',system-ui,sans-serif !important}}
-footer,#MainMenu,[data-testid=stMainMenu],[data-testid=stAppDeployButton],[data-testid=stToolbarActions],[data-testid=stDecoration]{{display:none !important}}
-header[data-testid=stHeader]{{background:transparent}}
-[data-testid=stExpandSidebarButton],[data-testid=stSidebarCollapsedControl],[data-testid=stSidebarCollapseButton],[data-testid=collapsedControl]{{visibility:visible !important;display:flex !important;color:var(--muted)}}
-.stApp{{background:var(--bg)}}
-.block-container{{max-width:800px;padding-top:2rem;padding-bottom:11rem}}
-
-/* ===== sidebar ===== */
-[data-testid=stSidebar]{{background:var(--side);border-right:1px solid var(--line)}}
-[data-testid=stSidebar][aria-expanded=true]{{min-width:300px;width:300px}}
-[data-testid=stSidebar] .block-container{{padding-top:1rem}}
-.brand{{display:flex;align-items:center;gap:.7rem;margin:.1rem 0 1.2rem}}
-.brand span,.hello .bn{{font-family:'Rock Salt',cursive !important;font-weight:400;letter-spacing:.02em;color:#8EA2FF}}
-.brand span{{font-size:1.15rem}}
-.brand svg{{width:36px;height:36px;flex:0 0 36px}}
-.st-key-newchat button{{background:#37383D;color:#fff;border:none;border-radius:999px;height:46px;font-weight:500;width:100%}}
-.st-key-newchat button:hover{{background:#424348;color:#fff}}
-.side-h{{font-size:.75rem;font-weight:500;color:var(--muted);margin:1.3rem 0 .35rem .35rem}}
-[class*="st-key-chat_"] button,[class*="st-key-act_"] button{{background:transparent;border:none;border-radius:10px;width:100%;justify-content:flex-start;
-   text-align:left;font-weight:400;font-size:.88rem;padding:.5rem .75rem;color:var(--text);box-shadow:none}}
-[class*="st-key-chat_"] button p,[class*="st-key-act_"] button p{{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
-[class*="st-key-chat_"] button:hover{{background:var(--hover)}}
-[class*="st-key-act_"] button{{background:var(--active) !important}}
-[class*="st-key-del_"] button{{background:transparent;border:none;color:var(--muted);padding:.2rem;min-height:0;box-shadow:none}}
-[class*="st-key-del_"] button:hover{{background:#3A2226;color:#FF6B6B}}
-.empty{{color:var(--muted);font-size:.82rem;padding:.2rem .35rem}}
-[data-testid=stFileUploaderDropzone]{{background:var(--box);border:1px dashed #44464C;border-radius:12px}}
-[data-testid=stFileUploaderDropzone]:hover{{border-color:var(--blue)}}
-.doc{{padding:.5rem .75rem;margin:.35rem 0;border:1px solid var(--line);border-radius:10px;background:var(--box)}}
-.doc b{{display:block;font-weight:500;font-size:.8rem;word-break:break-word;color:var(--text)}}
-.doc span{{color:var(--muted);font-size:.72rem}}
-.who{{display:flex;align-items:center;gap:.7rem;font-size:.9rem;font-weight:500;margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--line)}}
-.who i{{width:34px;height:34px;border-radius:50%;background:#D0451B;color:#fff;font-style:normal;display:flex;align-items:center;justify-content:center;font-weight:600}}
-[data-testid=stExpander]{{border:1px solid var(--line);border-radius:12px;background:transparent}}
-[data-testid=stExpander] summary{{font-size:.86rem;font-weight:500}}
-
-/* ===== greeting ===== */
-.hello{{display:flex;align-items:center;justify-content:center;gap:.7rem;margin-top:21vh;margin-bottom:1.6rem;font-size:1.65rem;font-weight:600;color:var(--text)}}
-.hello svg{{width:40px;height:40px}}
-
-/* ===== composer ===== */
-[class*="st-key-cmp_"] [data-testid=stForm]{{background:var(--box);border:1px solid #36373C;border-radius:22px;padding:.9rem 1.1rem .8rem}}
-[class*="st-key-cmp_"] [data-testid=stForm]:focus-within{{border-color:#4A5CC6}}
-[class*="st-key-cmp_"] input{{background:transparent !important;border:none !important;box-shadow:none !important;font-size:1rem;color:var(--text);padding:.4rem 0 .9rem}}
-[class*="st-key-cmp_"] [data-testid=stTextInput]>div,[class*="st-key-cmp_"] [data-testid=stTextInputRootElement]{{border:none !important;background:transparent !important;box-shadow:none !important}}
-[data-testid=InputInstructions]{{display:none}}
-[class*="st-key-cmp_"] button[kind=secondaryFormSubmit],[class*="st-key-cmp_"] [data-testid=stFormSubmitButton] button{{background:var(--blue);border:none;border-radius:50%;width:38px;height:38px;min-height:0;padding:0;color:#fff;float:right}}
-[class*="st-key-cmp_"] [data-testid=stFormSubmitButton] button:hover{{background:#6F87FF;color:#fff}}
-[class*="st-key-cmp_"] [data-testid=stPills] button{{border-radius:999px;font-size:.82rem;font-weight:500;padding:.3rem .85rem;border:1px solid #484A51;background:transparent;color:var(--text)}}
-[class*="st-key-cmp_"] [data-testid=stPills] button[aria-checked=true],[class*="st-key-cmp_"] [data-testid=stPills] button[kind=pillsActive]{{background:#25306B;border-color:var(--blue);color:#9FB1FF}}
-.st-key-cmp_fixed{{position:fixed;bottom:1.4rem;left:calc((100vw + 300px)/2);transform:translateX(-50%);width:min(780px,calc(100vw - 300px - 3rem));z-index:99}}
-.stApp:has([data-testid=stSidebar][aria-expanded=false]) .st-key-cmp_fixed{{left:50%;width:min(780px,calc(100vw - 3rem))}}
-.note{{text-align:center;color:var(--muted);font-size:.72rem;margin-top:.5rem}}
-
-/* ===== messages ===== */
-[data-testid=stChatMessageAvatarUser],[data-testid=stChatMessageAvatarAssistant]{{display:none}}
-[data-testid=stChatMessage]{{background:transparent;padding:.55rem 0}}
-[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]){{flex-direction:row-reverse}}
-[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]) [data-testid=stChatMessageContent]{{background:var(--box);border-radius:18px;padding:.7rem 1.1rem;max-width:80%;margin-left:auto}}
-[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarAssistant])::before{{content:"";flex:0 0 30px;height:30px;margin-right:.8rem;margin-top:.15rem;
-   background:url("{FOX_URI}") no-repeat center/contain}}
-[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarAssistant]) [data-testid=stChatMessageContent]{{line-height:1.75}}
-.chip{{display:inline-block;padding:.2rem .7rem;margin:.15rem .3rem .15rem 0;border:1px solid #3A3C42;border-radius:999px;color:var(--muted);font-size:.75rem}}
-.tchip{{display:inline-block;padding:.3rem .85rem;margin:.2rem .35rem .2rem 0;border-radius:999px;background:#25306B;color:#9FB1FF;font-size:.82rem;font-weight:500}}
-.pass{{border-left:2px solid #3A3C42;padding:.1rem 0 .1rem .8rem;margin:.55rem 0;font-size:.82rem;color:var(--muted);font-weight:300}}
-.pass b{{color:var(--text);font-weight:500}}
-.stButton>button{{border:1px solid #3A3C42;border-radius:14px;background:transparent;color:var(--text);font-weight:400;font-size:.84rem;padding:.55rem .9rem;height:auto;box-shadow:none}}
-.stButton>button p{{white-space:normal;text-align:left}}
-.stButton>button:hover{{border-color:var(--blue);color:#9FB1FF;background:#1F2133}}
-</style>""", unsafe_allow_html=True)
+from ingest import index as index_files, remove as remove_doc
+from style import css, OWL
 
 ss = st.session_state
-ss.setdefault("chats", {}); ss.setdefault("order", []); ss.setdefault("cur", None)
-ss.setdefault("done", set()); ss.setdefault("pending", None)
+ss.setdefault("theme", st.query_params.get("theme", "light") if st.query_params.get("theme") in ("light", "dark") else "light")
+for k, v in dict(chats={}, order=[], cur=None, done=set(), pending=None, view="chat", bm=[], tc={}).items(): ss.setdefault(k, v)
+st.markdown(css(ss.theme), unsafe_allow_html=True)
 
-try: kb = docs()
+@st.cache_data(ttl=30, show_spinner=False)
+def kb_list(): return docs()
+try: kb = kb_list()
 except Exception: kb = []
 
-# ---- read submitted input BEFORE layout (widget state is available at run start) ----
+# ---------- read submitted input before layout ----------
 q = ss.pending
 if not q and (ss.get("send") or "send" not in ss): q = (ss.get("txt") or "").strip()
 ss.pending = None
+if q: ss.view = "chat"
 chat = ss.chats.get(ss.cur)
-empty = not (chat and chat["msgs"]) and not q
-modes = ss.get("modes") or []
-deep, wide = "Deep Think" in modes, "Wide Search" in modes
+deep, wide = bool(ss.get("deep")), bool(ss.get("wide"))
+TITLES = {"docs": "Documents", "topics": "Explore topics", "bm": "Bookmarks"}
 
-def composer(key):
-    with st.container(key=key):
-        with st.form(key + "_f", clear_on_submit=True, border=False):
-            st.text_input("msg", key="txt", placeholder="Message TRAG AI" if kb else "Upload a PDF in the sidebar to begin",
-                          label_visibility="collapsed", disabled=not kb)
-            a, b = st.columns([6, 1], vertical_alignment="center")
-            with a: st.pills("modes", ["Deep Think", "Wide Search"], selection_mode="multi", key="modes", label_visibility="collapsed")
-            with b:
-                try: st.form_submit_button("", icon=":material/arrow_upward:", key="send")
-                except TypeError: st.form_submit_button("", icon=":material/arrow_upward:")
+def handle_upload(files):
+    new = [f for f in files or [] if (f.name, f.size) not in ss.done]
+    if new:
+        with st.spinner(f"Indexing {len(new)} file(s)"):
+            n = index_files([(f.name, f) for f in new])
+        ss.done |= {(f.name, f.size) for f in new}; kb_list.clear()
+        st.toast(f"Indexed {n} passages from {len(new)} file(s)", icon=":material/check_circle:"); st.rerun()
+
+def set_theme(t):
+    ss.theme = t; st.query_params["theme"] = t; st.rerun()
+
+def topbar(title):
+    _, c, r = st.columns([1, 5, 2], vertical_alignment="center")
+    c.markdown(f'<div class="ttl">{html.escape(title)}</div>', unsafe_allow_html=True)
+    with r:
+        a, b, s = st.columns(3)
+        with a, st.container(key=("tba_" if ss.theme == "light" else "tb_") + "sun"):
+            if st.button("", icon=":material/light_mode:", key="sun", help="Light theme"): set_theme("light")
+        with b, st.container(key=("tba_" if ss.theme == "dark" else "tb_") + "moon"):
+            if st.button("", icon=":material/dark_mode:", key="moon", help="Dark theme"): set_theme("dark")
+        with s, st.container(key="settings"):
+            with st.popover("", icon=":material/settings:"):
+                st.markdown("**Answer settings**")
+                st.toggle("Deep Think (longer reasoning)", key="deep")
+                st.toggle("Wide Search (8 passages)", key="wide")
+    st.markdown('<div class="topline"></div>', unsafe_allow_html=True)
 
 def show_sources(srcs):
     if not srcs: return
@@ -123,70 +59,118 @@ def show_sources(srcs):
         for s, p, t in srcs:
             st.markdown(f'<div class="pass"><b>{html.escape(s)}</b> · page {p}<br>{html.escape(t[:380])}</div>', unsafe_allow_html=True)
 
-# ---- main ----
-if empty:
-    st.markdown(f'<div class="hello">{FOX}<span>Hi! What\'s on your mind today?</span></div>', unsafe_allow_html=True)
-    composer("cmp_mid")
-    if kb:
-        st.write("")
-        ex = ["What is the minimum attendance required?", "Summarise the key rules", "What documents are required for registration?", "What is the exam revaluation procedure?"]
-        c1, c2 = st.columns(2)
-        for i, e in enumerate(ex):
-            if (c1 if i % 2 == 0 else c2).button(e, key=f"ex{i}", use_container_width=True): ss.pending = e; st.rerun()
-        with st.expander("Explore topics in a document"):
-            pick = st.selectbox("Document", [k for k, _ in kb], label_visibility="collapsed")
-            if st.button("Show topics", key="topics"):
-                with st.spinner("Reading document"):
-                    try: st.markdown("".join(f'<span class="tchip">{html.escape(t)}</span>' for t in topics(pick)), unsafe_allow_html=True)
-                    except Exception: st.warning("Could not load topics. Please try again.")
-    else:
-        st.info("Upload one or more PDFs in the sidebar to get started.")
-else:
-    if q:
-        if not chat:
-            cid = uuid.uuid4().hex[:8]; ss.chats[cid] = {"title": q[:40], "msgs": []}; ss.order.insert(0, cid); ss.cur = cid; chat = ss.chats[cid]
-        chat["msgs"].append({"role": "user", "text": q})
-    for m in chat["msgs"]:
-        with st.chat_message(m["role"]):
-            st.markdown(m["text"]); show_sources(m.get("srcs"))
-    if q:
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking" if deep else "Searching your documents"):
-                try: a, s = ask(q, deep, wide)
-                except Exception: a, s = "Something went wrong while searching. Please try again.", []
-            def gen():
-                for w in a.split(" "): yield w + " "; time.sleep(0.012)
-            st.write_stream(gen()); show_sources(s)
-        chat["msgs"].append({"role": "assistant", "text": a, "srcs": s})
-    composer("cmp_fixed")
+def bookmark(key, question, a, srcs):
+    on = any(b["a"] == a for b in ss.bm)
+    with st.container(key=("bmon_" if on else "bm_") + key):
+        if st.button("", icon=":material/bookmark:", key="b" + key, help="Remove bookmark" if on else "Bookmark this answer"):
+            ss.bm = [b for b in ss.bm if b["a"] != a] if on else ss.bm + [{"q": question, "a": a, "srcs": srcs}]
+            st.rerun()
 
-# ---- sidebar (rendered last so titles include the new chat) ----
+def composer():
+    with st.container(key="cmp"):
+        with st.popover("", icon=":material/attach_file:"):
+            st.markdown("**Add PDFs to the knowledge base**")
+            up = st.file_uploader("PDF", type="pdf", accept_multiple_files=True, key="up_clip", label_visibility="collapsed")
+        with st.form("cmp_f", clear_on_submit=True, border=False):
+            a, b = st.columns([14, 1], vertical_alignment="center")
+            with a: st.text_input("msg", key="txt", label_visibility="collapsed",
+                                  placeholder="Message TRAG AI" if kb else "Add documents first (paperclip icon)")
+            with b:
+                try: st.form_submit_button("", icon=":material/arrow_upward:", key="send")
+                except TypeError: st.form_submit_button("", icon=":material/arrow_upward:")
+        st.markdown('<div class="note">TRAG AI can make mistakes. Please verify important information.</div>', unsafe_allow_html=True)
+    handle_upload(up)
+
+# ======================= MAIN =======================
+view = ss.view
+topbar(TITLES.get(view) or (chat["title"] if chat else (q[:40] if q else "New Chat")))
+
+if view == "docs":
+    st.markdown('<h3 class="pg">Documents</h3><p class="pgs">PDFs are chunked, embedded and indexed automatically when uploaded.</p>', unsafe_allow_html=True)
+    handle_upload(st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True, key="up_docs", label_visibility="collapsed"))
+    if not kb: st.markdown('<div class="card"><span>No documents yet. Upload PDFs above to start.</span></div>', unsafe_allow_html=True)
+    for name, n in kb:
+        a, b = st.columns([9, 1], vertical_alignment="center")
+        a.markdown(f'<div class="card"><b>{html.escape(name)}</b><br><span>{n} passages indexed</span></div>', unsafe_allow_html=True)
+        if b.button("", icon=":material/delete:", key=f"rm_{name}", help="Remove document"):
+            remove_doc(name); ss.done = {d for d in ss.done if d[0] != name}; kb_list.clear(); st.rerun()
+
+elif view == "topics":
+    st.markdown('<h3 class="pg">Explore topics</h3><p class="pgs">Pick a document, see what it covers, and ask about any topic in one click.</p>', unsafe_allow_html=True)
+    if not kb: st.markdown('<div class="card"><span>Add a document first.</span></div>', unsafe_allow_html=True)
+    else:
+        pick = st.selectbox("Document", [k for k, _ in kb], label_visibility="collapsed")
+        if st.button("Generate topics", key="gen", icon=":material/auto_awesome:"):
+            with st.spinner("Reading document"):
+                try: ss.tc[pick] = topics(pick)
+                except Exception: st.toast("Could not read this document. Try again.")
+        cols = st.columns(2)
+        for i, t in enumerate(ss.tc.get(pick, [])):
+            if cols[i % 2].button(t, key=f"tp{i}", use_container_width=True): ss.pending = f"Explain: {t}"; st.rerun()
+
+elif view == "bm":
+    st.markdown('<h3 class="pg">Bookmarks</h3><p class="pgs">Answers you saved for later.</p>', unsafe_allow_html=True)
+    if not ss.bm: st.markdown('<div class="card"><span>Nothing saved yet. Use the bookmark icon under any answer.</span></div>', unsafe_allow_html=True)
+    for i, b in enumerate(list(ss.bm)):
+        x, y = st.columns([12, 1], vertical_alignment="top")
+        x.markdown(f'<div class="card"><div class="q">{html.escape(b["q"])}</div>{html.escape(b["a"])}</div>', unsafe_allow_html=True)
+        if y.button("", icon=":material/close:", key=f"rb{i}", help="Remove"): ss.bm.pop(i); st.rerun()
+
+else:  # chat
+    if q and not chat:
+        cid = uuid.uuid4().hex[:8]; ss.chats[cid] = {"title": q[:40], "msgs": []}; ss.order.insert(0, cid); ss.cur = cid; chat = ss.chats[cid]
+    if q: chat["msgs"].append({"role": "user", "text": q})
+    if not (chat and chat["msgs"]):
+        st.markdown(f'<div class="hero">{OWL}<div class="t">Welcome</div>'
+                    '<div class="s">Ask anything about your college documents, or pick a starting point below.</div></div>', unsafe_allow_html=True)
+        if kb:
+            ex = [("Summarise key rules", ":material/description:", "Give a short summary of the key rules in my documents"),
+                  ("Attendance rules", ":material/event_available:", "What is the minimum attendance required to appear for the semester examination?"),
+                  ("Exam revaluation", ":material/fact_check:", "What is the procedure for examination revaluation?"),
+                  ("Registration documents", ":material/folder_open:", "What documents are required for registration?"),
+                  ("Placement eligibility", ":material/work:", "What is the eligibility criterion for placement?"),
+                  ("Fee and refund rules", ":material/payments:", "What are the fee payment and refund rules?")]
+            cols = st.columns(3)
+            for i, (lab, ico, qq) in enumerate(ex):
+                if cols[i % 3].button(lab, icon=ico, key=f"ex{i}", use_container_width=True): ss.pending = qq; st.rerun()
+        else:
+            if st.button("Add documents to begin", icon=":material/upload_file:", key="go_docs"): ss.view = "docs"; st.rerun()
+    else:
+        msgs = chat["msgs"]
+        for i, m in enumerate(msgs):
+            with st.chat_message(m["role"]):
+                st.markdown(m["text"])
+                if m["role"] == "assistant":
+                    show_sources(m.get("srcs")); bookmark(f"{ss.cur}_{i}", msgs[i - 1]["text"], m["text"], m.get("srcs"))
+        if q:
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking" if deep else "Searching your documents"):
+                    try: a, s = ask(q, deep, wide)
+                    except Exception: a, s = "Something went wrong while searching. Please try again.", []
+                def gen():
+                    for w in a.split(" "): yield w + " "; time.sleep(0.012)
+                st.write_stream(gen()); show_sources(s)
+            msgs.append({"role": "assistant", "text": a, "srcs": s}); bookmark(f"{ss.cur}_{len(msgs)-1}", q, a, s)
+    composer()
+
+# ======================= SIDEBAR =======================
 with st.sidebar:
-    st.markdown(f'<div class="brand">{FOX}<span>TRAG AI</span></div>', unsafe_allow_html=True)
-    if st.button("New chat", icon=":material/add_circle:", key="newchat", use_container_width=True):
-        ss.cur = None; st.rerun()
+    st.markdown(f'<div class="brand">{OWL}<span>TRAG AI</span></div>', unsafe_allow_html=True)
+    if st.button("New Chat", icon=":material/add:", key="newchat", use_container_width=True): ss.cur = None; ss.view = "chat"; st.rerun()
+    st.write("")
+    for key, label, ico in [("chat", "Home", ":material/home:"), ("docs", "Documents", ":material/folder:"),
+                            ("topics", "Explore topics", ":material/explore:"), ("bm", "Bookmarks", ":material/bookmark:")]:
+        with st.container(key=("navact_" if ss.view == key else "nav_") + key):
+            if st.button(label, icon=ico, key="n_" + key, use_container_width=True): ss.view = key; st.rerun()
     st.markdown('<div class="side-h">Today</div>', unsafe_allow_html=True)
     if not ss.order: st.markdown('<div class="empty">No conversations yet.</div>', unsafe_allow_html=True)
     for cid in list(ss.order):
         a, b = st.columns([6, 1], vertical_alignment="center")
-        with a:
-            with st.container(key=f"{'act' if cid == ss.cur else 'chat'}_{cid}"):
-                if st.button(ss.chats[cid]["title"], key=f"open_{cid}", use_container_width=True): ss.cur = cid; st.rerun()
-        with b:
-            with st.container(key=f"del_{cid}"):
-                if st.button("", icon=":material/close:", key=f"x_{cid}", help="Delete chat"):
-                    ss.order.remove(cid); ss.chats.pop(cid, None)
-                    if ss.cur == cid: ss.cur = None
-                    st.rerun()
-    st.markdown('<div class="side-h">Knowledge base</div>', unsafe_allow_html=True)
-    up = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True, label_visibility="collapsed")
-    new = [f for f in up or [] if (f.name, f.size) not in ss.done]
-    if new:
-        with st.spinner(f"Indexing {len(new)} file(s)"):
-            n = index_files([(f.name, f) for f in new])
-        ss.done |= {(f.name, f.size) for f in new}
-        st.success(f"Indexed {n} passages"); st.rerun()
-    for name, n in kb:
-        st.markdown(f'<div class="doc"><b>{html.escape(name)}</b><span>{n} passages indexed</span></div>', unsafe_allow_html=True)
-    if not kb: st.markdown('<div class="empty">No documents yet. PDFs are indexed automatically on upload.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="who"><i>G</i>Guest</div>', unsafe_allow_html=True)
+        with a, st.container(key=f"{'act' if cid == ss.cur and ss.view == 'chat' else 'chat'}_{cid}"):
+            if st.button(ss.chats[cid]["title"], icon=":material/chat_bubble_outline:", key=f"open_{cid}", use_container_width=True): ss.cur = cid; ss.view = "chat"; st.rerun()
+        with b, st.container(key=f"del_{cid}"):
+            if st.button("", icon=":material/close:", key=f"x_{cid}", help="Delete chat"):
+                ss.order.remove(cid); ss.chats.pop(cid, None)
+                if ss.cur == cid: ss.cur = None
+                st.rerun()
+    st.markdown(f'<div class="who"><i>G</i><div><b>Guest</b><small>{len(kb)} documents indexed</small></div></div>', unsafe_allow_html=True)

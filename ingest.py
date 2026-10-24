@@ -37,3 +37,8 @@ def run(folder):
 
 if __name__ == "__main__":
     run(sys.argv[1] if len(sys.argv) > 1 else "data")
+
+def remove(name):
+    """Delete every passage of one document from the vector store."""
+    qd.delete(c.COLLECTION, points_selector=m.FilterSelector(filter=m.Filter(
+        must=[m.FieldCondition(key="source", match=m.MatchValue(value=name))])))
