@@ -23,7 +23,7 @@ def ask(q):
     if not hits:                            # no evidence -> refuse WITHOUT calling the LLM (0 tokens)
         return c.NOT_FOUND, []
     ctx = "\n\n".join(f"[{h.payload['source']} p{h.payload['page']}] {h.payload['text']}" for h in hits)
-    r = cl.chat.completions.create(model=c.LLM_MODEL, max_tokens=c.MAX_OUT, temperature=0,
+    r = cl.chat.completions.create(model=c.LLM_MODEL, max_completion_tokens=c.MAX_OUT, reasoning_effort="low",
                                    messages=[{"role": "system", "content": SYSTEM},
                                              {"role": "user", "content": f"CONTEXT:\n{ctx}\n\nQUESTION: {q}"}])
     srcs = sorted({(h.payload["source"], h.payload["page"]) for h in hits})
