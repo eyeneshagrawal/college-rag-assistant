@@ -27,8 +27,35 @@ def ask(q):
     r = cl.chat.completions.create(model=c.LLM_MODEL, max_completion_tokens=c.MAX_OUT, reasoning_effort="low",
                                    messages=[{"role": "system", "content": SYSTEM},
                                              {"role": "user", "content": f"CONTEXT:\n{ctx}\n\nQUESTION: {q}"}])
-    srcs = sorted({(h.payload["source"], h.payload["page"]) for h in hits})
+    srcs = [(h.payload["source"], h.payload["page"], h.payload["text"]) for h in hits]
     ans = re.sub(r"【[^】]*】", "", r.choices[0].message.content).strip()
     if ans.replace(c.NOT_FOUND, "").strip():          # real answer: drop any stray refusal sentence
         return ans.replace(c.NOT_FOUND, "").strip(), srcs
     return c.NOT_FOUND, []
+
+
+def docs():
+    """[(source, chunk_count)] of everything indexed."""
+    if not qd.collection_exists(c.COLLECTION): return []
+    try:
+        return sorted((h.value, h.count) for h in qd.facet(c.COLLECTION, key="source", limit=200).hits)
+    except Exception:
+        from collections import Counter
+        cnt, off = Counter(), None
+        while True:
+            pts, off = qd.scroll(c.COLLECTION, limit=256, offset=off, with_payload=["source"], with_vectors=False)
+            cnt.update(p.payload["source"] for p in pts)
+            if off is None: return sorted(cnt.items())
+
+@functools.lru_cache(maxsize=64)
+def topics(source):
+    """One cheap LLM call per document (cached): 6-8 askable topics from a sample of its chunks."""
+    from qdrant_client import models as m
+    f = m.Filter(must=[m.FieldCondition(key="source", match=m.MatchValue(value=source))])
+    pts, _ = qd.scroll(c.COLLECTION, scroll_filter=f, limit=40, with_payload=True, with_vectors=False)
+    step = max(1, len(pts) // 10)
+    sample = "\n".join(p.payload["text"][:260] for p in pts[::step][:10])
+    r = cl.chat.completions.create(model=c.LLM_MODEL, max_completion_tokens=400, reasoning_effort="low",
+        messages=[{"role": "user", "content": "From this document excerpt list 6-8 short topics a student could ask about. "
+                   "One per line, no numbering, no extra text.\n\n" + sample}])
+    return [x.strip("-•* \t") for x in r.choices[0].message.content.splitlines() if x.strip()][:8]
