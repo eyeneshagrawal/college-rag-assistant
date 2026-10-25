@@ -1,5 +1,51 @@
 question,expected_source,category
-What is the minimum attendance required for the semester exam?,academic_regulations.pdf,A
+What is the minimum attendance required to appear for the semester examination?,academic_regulations.pdf,A
+How many credits are required for graduation in the B.Tech programme?,academic_regulations.pdf,A
+What minimum CGPA is required to be awarded the degree?,academic_regulations.pdf,A
+What is the condonation fee per course for attendance shortage?,academic_regulations.pdf,A
+How many backlog courses can a student carry into the final year?,academic_regulations.pdf,A
+Within how many days of result declaration can a student apply for revaluation?,examination_rules.pdf,A
+What is the revaluation fee per course?,examination_rules.pdf,A
+What is the fee for a photocopy of the answer script?,examination_rules.pdf,A
+How many minutes before the exam must students report to the examination hall?,examination_rules.pdf,A
+What is the supplementary examination fee for the first attempt?,examination_rules.pdf,A
+How much does a duplicate identity card cost?,student_handbook.pdf,A
+Within how many working days does the grievance cell resolve a complaint?,student_handbook.pdf,A
+What are the health centre timings?,student_handbook.pdf,A
+What is the minimum CGPA for campus placement?,placement_guidelines.pdf,A
+What is the placement registration fee?,placement_guidelines.pdf,A
+What is a dream offer?,placement_guidelines.pdf,A
+What is the late registration fee for semester registration?,admission_and_registration.pdf,A
+Which documents must be produced at the time of admission?,admission_and_registration.pdf,A
+What is the annual tuition fee for the B.Tech programme?,fee_guidelines.pdf,A
+What is the late fee charged per day?,fee_guidelines.pdf,A
+How many books can an undergraduate student borrow at a time?,library_rules.pdf,A
+What is the library fine per day per book?,library_rules.pdf,A
+How are marks split in laboratory courses?,laboratory_instructions.pdf,A
+What scholarship is given for a CGPA of 9.0 or above?,scholarship_policy.pdf,A
+On which date do classes commence for the odd semester?,departmental_notices_and_calendar.pdf,A
 How many classes can I miss?,academic_regulations.pdf,B
+How many credits do I need to finish my degree?,academic_regulations.pdf,B
+What happens if my attendance is only 70 percent?,academic_regulations.pdf,B
+How long do I have to challenge my marks after results come out?,examination_rules.pdf,B
+How much do I have to pay to get my paper rechecked?,examination_rules.pdf,B
+Can I wear a smartwatch during exams?,examination_rules.pdf,B
+What score do I need to be allowed in campus recruitment drives?,placement_guidelines.pdf,B
+Can I sit for another company after I already got a job offer?,placement_guidelines.pdf,B
+What if I pay my semester fee after the due date?,fee_guidelines.pdf,B
+How long can I keep a library book at home?,library_rules.pdf,B
+Is a lab coat compulsory in the laboratory?,laboratory_instructions.pdf,B
+Which certificates should I bring on admission day?,admission_and_registration.pdf,B
+How much money do I get back if I leave before classes start?,fee_guidelines.pdf,B
+Is there financial help for students from low-income families?,scholarship_policy.pdf,B
+When does the winter break begin?,departmental_notices_and_calendar.pdf,B
 What is the hostel fee?,,C
 Who will be the chief guest next year?,,C
+What is the price of a meal in the cafeteria?,,C
+What is the college bus transport fee?,,C
+What is the name of the principal?,,C
+What is the salary of an assistant professor?,,C
+What is the eligibility for PhD admission?,,C
+When is the inter-college cricket tournament?,,C
+What is the Wi-Fi password?,,C
+What is the MBA fee structure?,,C
